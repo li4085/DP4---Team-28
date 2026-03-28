@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.5.2
@@ -34,3 +35,8 @@ uvloop==0.22.1; sys_platform != "win32"
 watchfiles==0.24.0
 websockets==13.1
 zipp==3.20.2
+=======
+fastapi
+uvicorn[standard]
+sqlmodel
+>>>>>>> dfef43b1be532cbce24d7c5568bc676811580656
