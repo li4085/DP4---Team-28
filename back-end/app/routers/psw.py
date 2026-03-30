@@ -8,7 +8,7 @@ router = APIRouter(prefix="/psw-login", tags=["PSW-login"])
 
 active_psw_sessions = {}
 
-@router.post("/signup", response_model = PSW_profiles)
+@router.post("/signup", response_model=PSW_profiles)
 def signup(psw: PSW_profiles, session: Session = Depends(get_session)):
     psw.password = hashlib.sha256(psw.password.encode()).hexdigest()
     session.add(psw)
@@ -21,10 +21,8 @@ def login(username: str, password: str, session: Session = Depends(get_session))
     hashed = hashlib.sha256(password.encode()).hexdigest()
     query = select(PSW_profiles).where(PSW_profiles.username == username, PSW_profiles.password == hashed)
     psw = session.exec(query).first()
-    
     if not psw:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    
     token = hashlib.sha256(f"{username}{password}".encode()).hexdigest()
     active_psw_sessions[token] = psw.id
     return {"token": token, "name": psw.name}
