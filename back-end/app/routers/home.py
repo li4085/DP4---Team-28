@@ -13,6 +13,11 @@ def get_home():
 @router.post("/queue/")
 def add_to_queue(token: str, session: Session = Depends(get_session)):
     patient_id = get_current_patient(token)
+    
+    existing = session.exec(select(PSWQueue).where(PSWQueue.patient_id == patient_id)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="You are already in the queue")
+    
     query = select(Patient_profiles).where(Patient_profiles.id == patient_id)
     patient_profile = session.exec(query).first()
     patient = PSWQueue(patient_id=patient_id, patient_name=patient_profile.name, priority=0)
@@ -24,6 +29,11 @@ def add_to_queue(token: str, session: Session = Depends(get_session)):
 @router.post("/queue/emergency/")
 def emergency_queue(token: str, session: Session = Depends(get_session)):
     patient_id = get_current_patient(token)
+
+    existing = session.exec(select(PSWQueue).where(PSWQueue.patient_id == patient_id)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="You are already in the queue")
+
     query = select(Patient_profiles).where(Patient_profiles.id == patient_id)
     patient_profile = session.exec(query).first()
     patient = PSWQueue(patient_id=patient_id, patient_name=patient_profile.name, priority=1)
