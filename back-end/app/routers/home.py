@@ -26,13 +26,36 @@ def add_to_queue(token: str, session: Session = Depends(get_session)):
     session.refresh(patient)
     return {"message": "Added to queue", "patient": patient}
 
+@router.get("/queue/status/")
+def get_queue_status(token: str, session: Session = Depends(get_session)):
+    patient_id = get_current_patient(token)
+    entry = session.exec(select(PSWQueue).where(PSWQueue.patient_id == patient_id)).first()
+
+    if not entry:
+        return {"in_queue": False}
+
+    return {"in_queue": True, "patient": entry}
+
+@router.delete("/queue/")
+def leave_queue(token: str, session: Session = Depends(get_session)):
+    patient_id = get_current_patient(token)
+    entry = session.exec(select(PSWQueue).where(PSWQueue.patient_id == patient_id)).first()
+
+    if not entry:
+        raise HTTPException(status_code=404, detail="You are not currently in the queue")
+
+    session.delete(entry)
+    session.commit()
+    return {"message": "Removed from queue"}
+
 @router.post("/queue/emergency/")
 def emergency_queue(token: str, session: Session = Depends(get_session)):
     patient_id = get_current_patient(token)
 
     existing = session.exec(select(PSWQueue).where(PSWQueue.patient_id == patient_id)).first()
     if existing:
-        raise HTTPException(status_code=400, detail="You are already in the queue")
+        session.delete(existing)
+        session.commit()
 
     query = select(Patient_profiles).where(Patient_profiles.id == patient_id)
     patient_profile = session.exec(query).first()

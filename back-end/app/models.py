@@ -12,10 +12,10 @@ class Patient_profiles(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     age: int
-    room_number: str
+    address: str
     username: str
     password: str
-    psw_id: Optional[int] = Field(default=None, foreign_key="psw_profiles.id")
+    psw_id: Optional[int] = Field(default=None, foreign_key="psw_profiles.id")  # ADD THIS
 
 class Schedule(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
