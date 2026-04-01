@@ -3,24 +3,25 @@ import { Link, useLocation } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"; //imports map comps
 import 'leaflet/dist/leaflet.css'; //imports built-in styles
 import L from 'leaflet'; //imports library
-
+ 
 delete L.Icon.Default.prototype._getIconUrl; //this breaks when its used with vite
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-}); 
+});
 //tells leaflet where to find the marker icons since the default paths are broken in vite
-
+ 
 const clients = [
   { id: 1, name: "Client A", address: "123 Main St, Hamilton, Ontario" },
   { id: 2, name: "Client B", address: "456 King St, Hamilton, Ontario" },
 ]; //will eventually be replaced with data from the backend, but for now this is just some dummy data to show how the map works
-
+ 
 export default function PSWMap() {
   const location = useLocation();
   const [markers, setMarkers] = useState([]); //iniitalizes empty array
-
+  const [pswLocation, setPswLocation] = useState(null); //starts when you dont know psw location
+ 
   //async waits for function to continue until it gets a response from the api, which is necessary since we need the coordinates to build the markers
   async function getCoordinates(address) {
     const response = await fetch(
@@ -33,10 +34,30 @@ export default function PSWMap() {
         lng: parseFloat(data[0].lon) //returns coordinate
       };
     }
-    return null; //returns noting if no results 
+    return null; //returns noting if no results
   }
-
-  useEffect(function() { //runs once page loads
+ 
+  navigator.geolocation.watchPosition(
+  function(position) {
+    setPswLocation({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    });
+  }
+);
+ 
+useEffect(function() {
+  navigator.geolocation.watchPosition(
+  function(position) {
+    setPswLocation({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    });
+  }
+);
+}, []); //runs once page loads to get psw location
+ 
+useEffect(function() { //runs once page loads
     async function buildMarkers() {
       const built = [];
       for (let i = 0; i < clients.length; i++) {
@@ -45,7 +66,6 @@ export default function PSWMap() {
         if (coords) {
           built.push(
             <Marker key={client.id} position={[coords.lat, coords.lng]}>
-              //bubble that appears when you click on the pin
               <Popup>
                 <strong>{client.name}</strong><br />
                 {client.address}
@@ -58,13 +78,13 @@ export default function PSWMap() {
     }
     buildMarkers();
   }, []);
-
+ 
   return (
     <div style={{
       display: 'flex',
       width: '100%'
     }}>
-
+ 
       {/* Side Bar */}
       <div style={{
         display: 'flex',
@@ -79,7 +99,7 @@ export default function PSWMap() {
           height: '650px',
           width: '200px'
         }}>
-
+ 
           <Link to="/psw" style={{
             color: 'white',
             textDecoration: 'none',
@@ -89,7 +109,7 @@ export default function PSWMap() {
             width: '100%',
             boxSizing: 'border-box'
           }}>Home</Link>
-
+ 
           <Link to="/psw/schedule" style={{
             color: 'white',
             textDecoration: 'none',
@@ -99,7 +119,7 @@ export default function PSWMap() {
             width: '100%',
             boxSizing: 'border-box'
           }}>Schedule</Link>
-
+ 
           <Link to="/psw/history" style={{
             color: 'white',
             textDecoration: 'none',
@@ -109,7 +129,7 @@ export default function PSWMap() {
             width: '100%',
             boxSizing: 'border-box'
           }}>History</Link>
-
+ 
           <Link to="/psw/map" style={{
             color: 'white',
             textDecoration: 'none',
@@ -120,7 +140,7 @@ export default function PSWMap() {
             boxSizing: 'border-box',
             backgroundColor: location.pathname === '/psw/map' ? '#64a449' : 'transparent'
           }}>Map</Link>
-
+ 
           <Link to="/psw/settings" style={{
             color: 'white',
             textDecoration: 'none',
@@ -129,10 +149,10 @@ export default function PSWMap() {
             width: '100%',
             boxSizing: 'border-box'
           }}>Settings</Link>
-
+ 
         </nav>
       </div>
-
+ 
       {/* Main Content */}
       <div style={{
         flex: 1,
@@ -143,9 +163,8 @@ export default function PSWMap() {
           fontSize: '60px',
           marginBottom: '20px',
           fontFamily: 'Monospace',
-          paddingRight: '150px'
         }}>Map</h1>
-
+ 
         <MapContainer
           center={[43.2557, -79.8711]} //hamilton starting coords
           zoom={13} //zoom level
@@ -161,7 +180,7 @@ export default function PSWMap() {
           />
           {markers}
         </MapContainer>
-
+ 
       </div>
     </div>
   );
