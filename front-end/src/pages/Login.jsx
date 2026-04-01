@@ -23,8 +23,7 @@ export default function Login() {
 
     try {
       const response = await fetch(
-        `${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-        { method: "POST" },
+        `${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {method: "POST"},
       );
 
       if (!response.ok) {

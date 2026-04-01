@@ -6,7 +6,10 @@ export default function PatientSchedule() {
   const location = useLocation();
  
   useEffect(() => {
-    fetch("http://localhost:8000/schedule")
+
+    const token = localStorage.getItem("token");
+
+    fetch(`http://localhost:8000/schedule/?token=${token}`)
       .then(res => res.json())
       .then(data => setTasks(data));
   }, []);
