@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
- 
+
 export default function PSWHistory() {
   const location = useLocation();
   return (
     <div style={{ display: 'flex' }}>
- 
+
+
       {/* Side Bar */}
       <div style={{
         display: 'flex',
@@ -19,7 +20,7 @@ export default function PSWHistory() {
           height: '650px',
           width: '200px'
         }}>
- 
+
           <Link to="/psw" style={{
             color: 'white',
             textDecoration: 'none',
@@ -65,10 +66,12 @@ export default function PSWHistory() {
             width: '100%',
             boxSizing: 'border-box'
           }}>Settings</Link>
- 
+
+
         </nav>
       </div>
- 
+
+
       {/*Main Content */}
       <div style={{ flex: 1, padding: '40px' }}>
         <h1 style={{
@@ -81,4 +84,5 @@ export default function PSWHistory() {
       </div>
     </div>
   );
+
 }
