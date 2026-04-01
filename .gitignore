@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 venv/
 app.db
+node_modules/
+front-end/node_modules/
