@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"; //imports map comps
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"; //imports map comps
 import 'leaflet/dist/leaflet.css'; //imports built-in styles
 import L from 'leaflet'; //imports library
+import 'leaflet-routing-machine';
  
 delete L.Icon.Default.prototype._getIconUrl; //this breaks when its used with vite
 L.Icon.Default.mergeOptions({
@@ -17,10 +18,32 @@ const clients = [
   { id: 2, name: "Client B", address: "456 King St, Hamilton, Ontario" },
 ]; //will eventually be replaced with data from the backend, but for now this is just some dummy data to show how the map works
  
+function RoutingControl({ from, to }) {
+  const map = useMap();
+  useEffect(function() {
+    if (!from || !to) return; //if either location is missing, dont do anything
+    const routingControl = L.Routing.control({
+      waypoints: [
+        L.latLng(from.lat, from.lng),
+        L.latLng(to.lat, to.lng)    ],
+      routeWhileDragging: false,
+      show: false,
+      addWaypoints: false,
+      draggableWaypoints: false,
+      fitSelectedRoutes: true,
+    }).addTo(map);
+    return function() {
+      map.removeControl(routingControl);
+    } //cleanup function to remove the routing control when the component unmounts or when from/to changes
+  }, [from, to]);
+  return null;
+}
+ 
 export default function PSWMap() {
   const location = useLocation();
   const [markers, setMarkers] = useState([]); //iniitalizes empty array
   const [pswLocation, setPswLocation] = useState(null); //starts when you dont know psw location
+  const [patient, setPatient] = useState(null);
  
   //async waits for function to continue until it gets a response from the api, which is necessary since we need the coordinates to build the markers
   async function getCoordinates(address) {
@@ -37,20 +60,23 @@ export default function PSWMap() {
     return null; //returns noting if no results
   }
  
-useEffect(function() {
-  const watchId = navigator.geolocation.watchPosition(
-    function(position) {
-      setPswLocation({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      });
-    }
+  navigator.geolocation.watchPosition(
+  function(position) {
+    setPswLocation({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    });
+  }
+);
+ 
+let pswMarker = null;
+if (pswLocation) {
+  pswMarker = (
+    <Marker position={[pswLocation.lat, pswLocation.lng]}>
+      <Popup>You are here</Popup>
+    </Marker>
   );
-
-  return function() {
-    navigator.geolocation.clearWatch(watchId);
-  };
-}, []); //runs once page loads to get psw location
+}
  
 useEffect(function() { //runs once page loads
     async function buildMarkers() {
@@ -62,8 +88,15 @@ useEffect(function() { //runs once page loads
           built.push(
             <Marker key={client.id} position={[coords.lat, coords.lng]}>
               <Popup>
-                <strong>{client.name}</strong><br />
+                <strong>{client.name}</strong>
+                <br />
                 {client.address}
+                <br />
+                <button onClick={function() {
+                  setPatient({ lat: coords.lat, lng: coords.lng });
+                }}>
+                  Get Directions
+                </button>
               </Popup>
             </Marker>
           );
@@ -75,10 +108,19 @@ useEffect(function() { //runs once page loads
   }, []);
  
   return (
-    <div style={{
-      display: 'flex',
-      width: '100%'
-    }}>
+    <div style={{ display: 'flex', width: '100%' }}>
+    <style>{`
+      .leaflet-routing-container {
+        background-color: #7ed957;
+        color: white;
+        font-family: Monospace;
+        border-radius: 12px;
+        padding: 10px;
+      }
+      .leaflet-routing-alt {
+        background-color: #7ed957;
+      }
+    `}</style>
  
       {/* Side Bar */}
       <div style={{
@@ -174,9 +216,14 @@ useEffect(function() { //runs once page loads
             attribution='© OpenStreetMap contributors'
           />
           {markers}
+          {pswMarker}
+          {pswLocation && patient && (
+          <RoutingControl from={pswLocation} to={patient} />
+)}
         </MapContainer>
  
       </div>
     </div>
   );
 }
+ 

@@ -64,8 +64,8 @@ export default function PatientSchedule() {
     const newTask = {
       task: taskName,
       date: taskDate,
-      duration: taskTime,
       start_time: taskStartTime,
+      duration: taskTime,
     };
 
     fetch(`http://localhost:8000/schedule/?token=${token}`, {
@@ -151,7 +151,7 @@ export default function PatientSchedule() {
   const timeRows = [];
   for (let i = 0; i < 24; i += 1) {
     const tasksForThisHour = [];
-    for (let j = 0; j < filteredTasks.length; j += 1) {
+      for (let j = 0; j < filteredTasks.length; j += 1) {  
       const task = filteredTasks[j];
       const hourPart = parseInt(task.startTime ? task.startTime.split(":")[0] : -1, 10);
       if (hourPart === i) {
