@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from sqlmodel import SQLModel
 
 from app.database import engine
-from app.routers import schedule, history, home, patients, psw, psw_home
+from app.routers import auth, schedule, history, home, patients, psw, psw_home
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(schedule.router)
 app.include_router(history.router)
 app.include_router(home.router)
+app.include_router(auth.router)
 app.include_router(patients.router)
 app.include_router(psw.router)
 app.include_router(psw_home.router)

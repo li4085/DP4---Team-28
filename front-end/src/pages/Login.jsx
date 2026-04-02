@@ -4,26 +4,20 @@ import { useNavigate } from 'react-router-dom';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    if (!username || !password || !role) {
+    if (!username || !password) {
       alert('Please make sure all fields are filled out.');
       return;
     }
-
-    const endpoint =
-      role === 'patient'
-        ? 'http://localhost:8000/patients-login/login'
-        : 'http://localhost:8000/psw-login/login';
 
     setIsSubmitting(true);
 
     try {
       const response = await fetch(
-        `${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+        `http://localhost:8000/auth/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
         { method: 'POST' },
       );
 
@@ -35,9 +29,9 @@ export default function Login() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('name', data.name);
-      localStorage.setItem('role', role);
+      localStorage.setItem('role', data.role);
 
-      if (role === 'patient') {
+      if (data.role === 'patient') {
         navigate('/patient');
       } else {
         navigate('/psw');
@@ -84,23 +78,6 @@ export default function Login() {
       >
         Login
       </h1>
-
-      <select
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-        style={{
-          padding: '10px',
-          width: '250px',
-          fontSize: '24px',
-          fontFamily: 'DM Sans',
-        }}
-      >
-        <option value="" disabled>
-          Select role
-        </option>
-        <option value="patient">Patient</option>
-        <option value="psw">PSW</option>
-      </select>
 
       <input
         type="text"

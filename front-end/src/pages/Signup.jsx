@@ -71,13 +71,8 @@ export default function Signup() {
         throw new Error(signupData.detail || 'Sign up failed.');
       }
 
-      const loginEndpoint =
-        role === 'patient'
-          ? 'http://localhost:8000/patients-login/login'
-          : 'http://localhost:8000/psw-login/login';
-
       const loginResponse = await fetch(
-        `${loginEndpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+        `http://localhost:8000/auth/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
         { method: 'POST' },
       );
 
@@ -89,9 +84,9 @@ export default function Signup() {
 
       localStorage.setItem('token', loginData.token);
       localStorage.setItem('name', loginData.name);
-      localStorage.setItem('role', role);
+      localStorage.setItem('role', loginData.role);
 
-      if (role === 'patient') {
+      if (loginData.role === 'patient') {
         navigate('/patient');
       } else {
         navigate('/psw');
