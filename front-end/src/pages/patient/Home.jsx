@@ -8,7 +8,6 @@ export default function PatientHome() {
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const name = localStorage.getItem("name")
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -215,17 +214,6 @@ export default function PatientHome() {
       </div>
 
       <div style={{ flex: 1, padding: '40px' }}>
-        <h1
-          style={{
-            color: '#547aad',
-            fontSize: '60px',
-            marginBottom: '20px',
-            fontFamily: 'Monospace',
-            paddingRight: '220px',
-          }}
-        >
-          Welcome, {name}!
-        </h1>
         <div
           style={{
             display: 'flex',
