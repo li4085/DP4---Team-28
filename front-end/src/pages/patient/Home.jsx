@@ -1,99 +1,239 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
- 
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
 export default function PatientHome() {
   const [activeButton, setActiveButton] = useState(null);
+  const [isInQueue, setIsInQueue] = useState(false);
+  const [isQueueLoading, setIsQueueLoading] = useState(true);
+  const [isEmergencyActive, setIsEmergencyActive] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setIsQueueLoading(false);
+      return;
+    }
+
+    fetch(`http://localhost:8000/home/queue/status/?token=${token}`)
+      .then(async (response) => {
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Could not load queue status.');
+        }
+
+        const inQueue = Boolean(data.in_queue);
+        const isEmergency = inQueue && data.patient?.priority === 1;
+
+        setIsInQueue(inQueue && !isEmergency);
+        setIsEmergencyActive(isEmergency);
+        setActiveButton(isEmergency ? 'emergency' : inQueue ? 'queue' : null);
+      })
+      .catch((error) => {
+        alert(error.message || 'Could not connect to the server.');
+      })
+      .finally(() => {
+        setIsQueueLoading(false);
+      });
+  }, []);
+
+  const handleQueueToggle = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('Please log in first.');
+      return;
+    }
+
+    setIsQueueLoading(true);
+
+    try {
+      const response = await fetch(`http://localhost:8000/home/queue/?token=${token}`, {
+        method: isInQueue ? 'DELETE' : 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Queue request failed.');
+      }
+
+      const nextInQueue = !isInQueue;
+      setIsInQueue(nextInQueue);
+      setIsEmergencyActive(false);
+      setActiveButton(nextInQueue ? 'queue' : null);
+
+      if (nextInQueue) {
+        alert("You're in the queue and the next available PSW is on their way.");
+      } else {
+        alert('You have left the queue.');
+      }
+    } catch (error) {
+      alert(error.message || 'Could not connect to the server.');
+    } finally {
+      setIsQueueLoading(false);
+    }
+  };
+
+  const handleEmergencyToggle = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('Please log in first.');
+      return;
+    }
+
+    setIsQueueLoading(true);
+
+    try {
+      const endpoint = isEmergencyActive
+        ? `http://localhost:8000/home/queue/?token=${token}`
+        : `http://localhost:8000/home/queue/emergency/?token=${token}`;
+
+      const response = await fetch(endpoint, {
+        method: isEmergencyActive ? 'DELETE' : 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Emergency request failed.');
+      }
+
+      if (isEmergencyActive) {
+        setIsEmergencyActive(false);
+        setIsInQueue(false);
+        setActiveButton(null);
+        alert('Emergency request cancelled. You have been removed from the queue.');
+      } else {
+        setIsEmergencyActive(true);
+        setIsInQueue(false);
+        setActiveButton('emergency');
+        alert('Emergency alert sent. A PSW will arrive as soon as possible.');
+      }
+    } catch (error) {
+      alert(error.message || 'Could not connect to the server.');
+    } finally {
+      setIsQueueLoading(false);
+    }
+  };
+
   return (
     <div style={{ display: 'flex' }}>
- 
-      {/* Side Bar */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        minHeight: '100vh',
-      }}>
-        <nav style={{
+      <div
+        style={{
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: '#547aad',
-          height: '650px',
-          width: '200px'
-        }}>
- 
-          <Link to="/patient" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '36px',
-            padding: '50px 20px',
-            borderBottom: '5px solid #325585',
-            width: '100%',
-            boxSizing: 'border-box',
-            backgroundColor: location.pathname === '/patient' ? '#325585' : 'transparent'
-          }}>Home</Link>
-          <Link to="/patient/schedule" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '36px',
-            padding: '50px 20px',
-            borderBottom: '5px solid #325585',
-            width: '100%',
-            boxSizing: 'border-box'
-          }}>Schedule</Link>
-          <Link to="/patient/history" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '36px',
-            padding: '50px 20px',
-            borderBottom: '5px solid #325585',
-            width: '100%',
-            boxSizing: 'border-box'
-          }}>History</Link>
-          <Link to="/patient/map" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '36px',
-            padding: '50px 20px',
-            borderBottom: '5px solid #325585',
-            width: '100%',
-            boxSizing: 'border-box'
-          }}>Map</Link>
-          <Link to="/patient/settings" style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontSize: '36px',
-            padding: '50px 20px',
-            width: '100%',
-            boxSizing: 'border-box'
-          }}>Settings</Link>
- 
-        </nav>
-      </div>
-      {/*Main Content */}
-      <div style={{ flex: 1, padding: '40px' }}>
-        <h1 style={{
-          color: '#547aad',
-          fontSize: '100px',
-          marginBottom: '20px',
-          fontFamily: 'Monospace',
-          paddingRight: '220px'
-        }}>Home</h1>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
           justifyContent: 'center',
-          paddingLeft: '50px',
-          alignItems: 'center',
-          paddingTop: '80px',
-          gap: '100px'
-        }}>
-          <div style={{
+          minHeight: '100vh',
+        }}
+      >
+        <nav
+          style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '60px'
-          }}>
-            <button onClick={() => setActiveButton(activeButton === 'schedule' ? null : 'schedule')}
+            backgroundColor: '#547aad',
+            height: '650px',
+            width: '200px',
+          }}
+        >
+          <Link
+            to="/patient"
+            style={{
+              color: 'white',
+              textDecoration: 'none',
+              fontSize: '36px',
+              padding: '50px 20px',
+              borderBottom: '5px solid #325585',
+              width: '100%',
+              boxSizing: 'border-box',
+              backgroundColor: location.pathname === '/patient' ? '#325585' : 'transparent',
+            }}
+          >
+            Home
+          </Link>
+          <Link
+            to="/patient/schedule"
+            style={{
+              color: 'white',
+              textDecoration: 'none',
+              fontSize: '36px',
+              padding: '50px 20px',
+              borderBottom: '5px solid #325585',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            Schedule
+          </Link>
+          <Link
+            to="/patient/history"
+            style={{
+              color: 'white',
+              textDecoration: 'none',
+              fontSize: '36px',
+              padding: '50px 20px',
+              borderBottom: '5px solid #325585',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            History
+          </Link>
+          <Link
+            to="/patient/map"
+            style={{
+              color: 'white',
+              textDecoration: 'none',
+              fontSize: '36px',
+              padding: '50px 20px',
+              borderBottom: '5px solid #325585',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            Map
+          </Link>
+          <Link
+            to="/patient/settings"
+            style={{
+              color: 'white',
+              textDecoration: 'none',
+              fontSize: '36px',
+              padding: '50px 20px',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            Settings
+          </Link>
+        </nav>
+      </div>
+
+      <div style={{ flex: 1, padding: '40px' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            paddingLeft: '50px',
+            alignItems: 'center',
+            paddingTop: '80px',
+            gap: '100px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '60px',
+            }}
+          >
+            <button
+              onClick={() => navigate('/patient/schedule', { state: { openForm: true } })}
               style={{
                 width: '400px',
                 height: '200px',
@@ -103,39 +243,58 @@ export default function PatientHome() {
                 cursor: 'pointer',
                 border: 'none',
                 fontSize: '40px',
-                borderRadius: '30px'
-              }}>
+                borderRadius: '30px',
+              }}
+            >
               Add To Schedule
             </button>
-            <button onClick={() => setActiveButton(activeButton === 'queue' ? null : 'queue')}
+            <button
+              onClick={handleQueueToggle}
+              disabled={isQueueLoading || isEmergencyActive}
               style={{
                 width: '400px',
                 height: '200px',
-                backgroundColor: activeButton === 'queue' ? '#325585' : '#547aad',
+                backgroundColor: isInQueue ? '#325585' : '#547aad',
                 fontFamily: 'DM Sans',
                 color: 'white',
-                cursor: 'pointer',
+                cursor: isQueueLoading || isEmergencyActive ? 'not-allowed' : 'pointer',
                 border: 'none',
                 borderRadius: '30px',
-              }}>
-              <span style={{ fontSize: '40px' }}> Call PSW </span>
+                opacity: isQueueLoading || isEmergencyActive ? 0.8 : 1,
+              }}
+            >
+              <span style={{ fontSize: '40px' }}>
+                {isQueueLoading ? 'Loading...' : isInQueue ? 'Leave Queue' : 'Call PSW'}
+              </span>
               <br />
-              <span style={{ fontSize: '24px' }}> Click to join queue </span>
+              <span style={{ fontSize: '24px' }}>
+                {isQueueLoading
+                  ? 'Checking queue status'
+                  : isEmergencyActive
+                    ? 'Unavailable during emergency'
+                    : isInQueue
+                      ? 'Click to leave the queue'
+                      : 'Click to join queue'}
+              </span>
             </button>
           </div>
-          <button onClick={() => setActiveButton(activeButton === 'emergency' ? null : 'emergency')}
+          <button
+            onClick={handleEmergencyToggle}
+            disabled={isQueueLoading}
             style={{
               width: '200px',
               height: '200px',
               borderRadius: '50%',
-              backgroundColor: activeButton === 'emergency' ? '#8f1d1d' : '#b82525',
+              backgroundColor: isEmergencyActive ? '#8f1d1d' : '#b82525',
               fontFamily: 'DM Sans',
               color: 'white',
-              cursor: 'pointer',
+              cursor: isQueueLoading ? 'wait' : 'pointer',
               border: 'none',
               fontSize: '24px',
-            }}>
-            EMERGENCY
+              opacity: isQueueLoading ? 0.8 : 1,
+            }}
+          >
+            {isEmergencyActive ? 'CANCEL' : 'EMERGENCY'}
           </button>
         </div>
       </div>

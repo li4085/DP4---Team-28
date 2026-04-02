@@ -1,5 +1,7 @@
-venv/
+.DS_Store
 __pycache__/
 *.pyc
-.env
+venv/
 app.db
+node_modules/
+front-end/node_modules/

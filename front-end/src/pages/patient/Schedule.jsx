@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"; //imports react libraries
 import { Link, useLocation } from "react-router-dom";
- 
+
 export default function PatientSchedule() {
   //makes components available to use in other files
   const [tasks, setTasks] = useState([]);
@@ -20,7 +20,7 @@ export default function PatientSchedule() {
   //These store the values of the form inputs for the new task (name, date, time) and start as empty strings
   const [selectedTask, setSelectedTask] = useState(null);
   //stores the task that is currently selected (for marking complete or cancelling), starts with no task selected
- 
+
   const weekDays = []; //array for dates
   for (let i = 0; i < 7; i += 1) {
     //for loop for days
@@ -28,14 +28,9 @@ export default function PatientSchedule() {
     tempDate.setDate(tempDate.getDate() + i); //adds next 7 days
     weekDays.push(tempDate); //adds that date to array of dates
   }
- 
-  const hours = []; //same thing but for hours
-  for (let i = 0; i < 24; i = i + 1) {
-    hours.push(i);
-  }
- 
+
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
- 
+
   function formatHour(hour) {
     if (hour === 0) {
       return "12am";
@@ -48,14 +43,14 @@ export default function PatientSchedule() {
     }
     return hour - 12 + "pm";
   }
- 
+
   useEffect(function () {
     const token = localStorage.getItem("token");
- 
+
     if (!token) {
       return;
     }
- 
+
     fetch(`http://localhost:8000/schedule/?token=${token}`)
       .then(function (res) {
         return res.json();
@@ -71,7 +66,7 @@ export default function PatientSchedule() {
         setTasks(normalized);
       });
   }, []);
- 
+
   function handleSubmit() {
     if (
       !taskName ||
@@ -83,21 +78,21 @@ export default function PatientSchedule() {
       setError("Please fill in all fields before submitting.");
       return;
     }
- 
+
     const token = localStorage.getItem("token");
- 
+
     if (!token) {
       setError("Please log in first.");
       return;
     }
- 
+
     const newTask = {
       task: taskName,
       date: taskDate,
       start_time: taskStartTime,
       duration: taskTime,
     };
- 
+
     fetch(`http://localhost:8000/schedule/?token=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -124,23 +119,23 @@ export default function PatientSchedule() {
         setError("Server error: Could not save task.");
       });
   }
- 
+
   const dayButtons = []; //array for day buttons
   for (let i = 0; i < 7; i += 1) {
     const date = weekDays[i]; //grabs date from array of dates
- 
+
     function getBgColour() {
       return selectedDate.toDateString() === date.toDateString()
         ? "#547aad"
         : "lightgray";
     }
- 
+
     function getTextColor() {
       return selectedDate.toDateString() === date.toDateString()
         ? "white"
         : "black";
     }
- 
+
     dayButtons.push(
       <div
         key={date.toDateString()}
@@ -182,7 +177,7 @@ export default function PatientSchedule() {
       </div>,
     );
   }
- 
+
   const filteredTasks = [];
   for (let i = 0; i < tasks.length; i += 1) {
     const task = tasks[i];
@@ -191,170 +186,7 @@ export default function PatientSchedule() {
       filteredTasks.push(task);
     }
   }
- 
-  const timeRows = []; //same thing but for hours
-  for (let i = 0; i < 24; i += 1) {
-    // Find tasks that start in this specific hour
-    const tasksForThisHour = [];
-    for (let j = 0; j < filteredTasks.length; j += 1) {
-      const task = filteredTasks[j];
-      const hourPart = parseInt(
-        task.startTime ? task.startTime.split(":")[0] : -1,
-        10,
-      );
-      if (hourPart === i) {
-        tasksForThisHour.push(task);
-      }
-    }
- 
-    timeRows.push(
-      <div
-        key={i}
-        style={{
-          height: "60px",
-          borderTop: "1px solid lightgray",
-          display: "flex",
-          position: "relative", // Allows absolute positioning for task blocks
-        }}
-      >
-        <div
-          style={{
-            width: "50px",
-            fontSize: "12px",
-            color: "Black",
-            fontFamily: "Monospace",
-          }}
-        >
-          {formatHour(i)}
-        </div>
-        <div style={{ flex: 1, position: "relative" }}>
-          {tasksForThisHour.map(function (task) {
-            const minutesPast = parseInt(
-              task.startTime ? task.startTime.split(":")[1] : 0,
-              10,
-            );
-            const duration = parseInt(task.time, 10) || 30;
- 
-return (
-  <div key={task.id}>
-    <div
-      onClick={function () {
-        if (selectedTask && selectedTask.id === task.id) {
-          setSelectedTask(null); // clicking same task closes dropdown
-        } else {
-          setSelectedTask(task); // clicking task opens dropdown
-        }
-      }}
-      style={{
-        position: "absolute",
-        top: minutesPast + "px",
-        left: "5px",
-        right: "10px",
-        height: duration + "px",
-        backgroundColor: "#547aad",
-        color: "white",
-        borderRadius: "8px",
-        padding: "4px",
-        fontSize: "12px",
-        zIndex: 10,
-        fontFamily: "Monospace",
-        cursor: "pointer",
-      }}
-    >
-      {task.task}
-    </div>
- 
-    {/* dropdown appears below task block when clicked */}
-    {selectedTask && selectedTask.id === task.id && (
-      <div
-        style={{
-          position: "absolute",
-          top: minutesPast + duration + "px",
-          left: "5px",
-          right: "10px",
-          backgroundColor: "white",
-          border: "1px solid lightgray",
-          borderRadius: "8px",
-          zIndex: 20,
-          padding: "8px",
-          display: "flex",
-          gap: "8px",
-        }}
-      >
-        <button
-          onClick={function () {
-  // calls the cancel endpoint which moves task to history as cancelled and removes from schedule
-  const token = localStorage.getItem("token");
-  fetch("http://localhost:8000/schedule/" + selectedTask.id + "/cancel", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then(function (res) {
-      return res.json();
-    })
-    .then(function () {
-      // removes task from the calendar view
-      setTasks(tasks.filter(function (t) {
-        return t.id !== selectedTask.id;
-      }));
-      setSelectedTask(null); // closes the dropdown
-    })
-    .catch(function () {
-      alert("Server error: Could not cancel task.");
-    });
-}}
-          style={{
-            flex: 1,
-            height: "35px",
-            backgroundColor: "#547aad",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontFamily: "Monospace",
-            fontSize: "12px",
-          }}
-        >
-          Add to History
-        </button>
-        <button
-          onClick={function () {
-            // Step 3 - cancel task logic goes here
-          }}
-          style={{
-            flex: 1,
-            height: "35px",
-            backgroundColor: "lightgray",
-            color: "black",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontFamily: "Monospace",
-            fontSize: "12px",
-          }}
-        >
-Cancel Task
-        </button>
-      </div>
-    )}
-  </div>
-);
-          })}
-        </div>
-      </div>,
-    );
-  }
- 
-  const taskItems = []; //holds items for filtered tasks
-  for (let i = 0; i < filteredTasks.length; i += 1) {
-    const task = filteredTasks[i];
-    taskItems.push(
-      <li key={task.id} style={{ fontFamily: "Monospace" }}>
-        {task.task} - {task.time}
-      </li>,
-    );
-  }
- 
+
   let customTimeInput = null;
   if (showOther1) {
     customTimeInput = (
@@ -380,7 +212,7 @@ Cancel Task
       </div>
     );
   }
- 
+
   let customTaskInput = null;
   if (showOther2) {
     customTaskInput = (
@@ -404,7 +236,7 @@ Cancel Task
       </div>
     );
   }
- 
+
   if (showForm) {
     return (
       <div
@@ -426,11 +258,11 @@ Cancel Task
             {error}
           </p>
         )}
- 
+
         <h1 style={{ marginBottom: "30px", fontFamily: "Monospace" }}>
           Add New Task
         </h1>
- 
+
         <div style={{ marginBottom: "20px" }}>
           <p style={{ fontFamily: "Monospace" }}>Required Task</p>
           <select
@@ -456,9 +288,9 @@ Cancel Task
             <option value="other">Other</option>
           </select>
         </div>
- 
+
         {customTaskInput}
- 
+
         <div style={{ marginBottom: "20px" }}>
           <p style={{ fontFamily: "Monospace" }}>Insert Date:</p>
           <input
@@ -477,7 +309,7 @@ Cancel Task
             }}
           />
         </div>
- 
+
         <div style={{ marginBottom: "20px" }}>
           <p style={{ fontFamily: "Monospace" }}>Insert Start Time:</p>
           <input
@@ -496,7 +328,7 @@ Cancel Task
             }}
           />
         </div>
- 
+
         <div style={{ marginBottom: "20px" }}>
           <p style={{ fontFamily: "Monospace" }}>Select Estimated Task Time:</p>
           <select
@@ -521,9 +353,9 @@ Cancel Task
             <option value="other">Other</option>
           </select>
         </div>
- 
+
         {customTimeInput}
- 
+
         <div
           style={{
             display: "flex",
@@ -547,7 +379,7 @@ Cancel Task
           >
             Submit Task
           </button>
- 
+
           <button
             onClick={function () {
               setShowForm(false);
@@ -571,7 +403,7 @@ Cancel Task
       </div>
     );
   }
- 
+
   return (
     <div style={{ display: "flex" }}>
       {/* Side Bar */}
@@ -667,6 +499,7 @@ Cancel Task
           </Link>
         </nav>
       </div>
+
       <div
         style={{
           flex: 1,
@@ -719,7 +552,7 @@ Cancel Task
             Patient Schedule
           </h1>
         </div>
- 
+
         <div
           style={{
             display: "flex",
@@ -731,20 +564,192 @@ Cancel Task
         >
           {dayButtons}
         </div>
- 
+
         <div
           style={{
             overflowY: "scroll", //you can scroll if there are too many hours to fit in box
             height: "500px",
           }}
         >
-          {timeRows}
-        </div>
- 
-        <div>
+          <div style={{ position: "relative", height: `${24 * 60}px` }}>
+            {/* Hour lines */}
+            {Array.from({ length: 24 }, function (_, i) {
+              return (
+                <div
+                  key={i}
+                  style={{
+                    position: "absolute",
+                    top: `${i * 60}px`,
+                    left: 0,
+                    right: 0,
+                    borderTop: "1px solid lightgray",
+                    display: "flex",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "50px",
+                      fontSize: "12px",
+                      color: "Black",
+                      fontFamily: "Monospace",
+                    }}
+                  >
+                    {formatHour(i)}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Tasks */}
+            {filteredTasks.map(function (task) {
+              const [hourStr, minStr] = (task.startTime || "0:0").split(":");
+              const startMinutes =
+                parseInt(hourStr, 10) * 60 + parseInt(minStr, 10);
+              const duration = parseInt(task.time, 10) || 30;
+
+              return (
+                <div key={task.id}>
+                  {/* Task block - click to open/close dropdown */}
+                  <div
+                    onClick={function () {
+                      if (selectedTask && selectedTask.id === task.id) {
+                        setSelectedTask(null); // clicking same task closes dropdown
+                      } else {
+                        setSelectedTask(task); // clicking task opens dropdown
+                      }
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: `${startMinutes}px`,
+                      left: "55px",
+                      right: "10px",
+                      height: `${duration}px`,
+                      backgroundColor: "#547aad",
+                      color: "white",
+                      borderRadius: "8px",
+                      padding: "4px",
+                      fontSize: "12px",
+                      zIndex: 10,
+                      fontFamily: "Monospace",
+                      cursor: "pointer",
+                      border: "0.5px solid lightgray",
+                      boxSizing: "border-box",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {task.task} - {task.startTime} - {task.time} mins
+                  </div>
+
+{/* Dropdown appears below task block when clicked */}
+                  {selectedTask && selectedTask.id === task.id && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: `${startMinutes + duration}px`,
+                        left: "55px",
+                        right: "10px",
+                        backgroundColor: "white",
+                        border: "1px solid lightgray",
+                        borderRadius: "8px",
+                        zIndex: 20,
+                        padding: "8px",
+                        display: "flex",
+                        gap: "8px",
+                      }}
+                    >
+                      <button
+                        onClick={function () {
+                          // calls the complete endpoint which moves task to history and removes from schedule
+                          const token = localStorage.getItem("token");
+                          fetch("http://localhost:8000/schedule/" + 
+                            selectedTask.id + "/cancel?token=" + token, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                            },
+                          )
+                            .then(function (res) {
+                              return res.json();
+                            })
+                            .then(function () {
+                              // removes task from the calendar view
+                              setTasks(
+                                tasks.filter(function (t) {
+                                  return t.id !== selectedTask.id;
+                                }),
+                              );
+                              setSelectedTask(null); // closes the dropdown
+                            })
+                            .catch(function () {
+                              alert("Server error: Could not complete task.");
+                            });
+                        }}
+                        style={{
+                          flex: 1,
+                          height: "35px",
+                          backgroundColor: "#547aad",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          fontFamily: "Monospace",
+                          fontSize: "12px",
+                        }}
+                      >
+                        Add to History
+                      </button>
+                      <button
+                        onClick={function () {
+                          // calls the cancel endpoint which moves task to history as cancelled and removes from schedule
+                          const token = localStorage.getItem("token");
+                          fetch("http://localhost:8000/schedule/" + 
+                            selectedTask.id + 
+                            "/cancel?token=" + 
+                            token, 
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                            },
+                          )
+                            .then(function (res) {
+                              return res.json();
+                            })
+                            .then(function () {
+                              // removes task from the calendar view
+                              setTasks(
+                                tasks.filter(function (t) {
+                                  return t.id !== selectedTask.id;
+                                }),
+                              );
+                              setSelectedTask(null); // closes the dropdown
+                            })
+                            .catch(function () {
+                              alert("Server error: Could not cancel task.");
+                            });
+                        }}
+                        style={{
+                          flex: 1,
+                          height: "35px",
+                          backgroundColor: "lightgray",
+                          color: "black",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          fontFamily: "Monospace",
+                          fontSize: "12px",
+                        }}
+                      >
+                        Cancel Task
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
   );
 }
- 

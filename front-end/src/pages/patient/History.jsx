@@ -5,22 +5,25 @@ export default function PatientHistory() { //makes available to other files
   const location = useLocation();
 
   useEffect(function () { //runs when the page loads
-    fetch("http://localhost:8000/history") //sends a GET request to the backend
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return;
+    }
+    fetch("http://localhost:8000/history/patient?token=" + token) //sends a GET request to the backend with token
       .then(function (res) {
         return res.json();
-      }) //converts data to javscript
+      }) //converts data to javascript
       .then(function (data) {
         setHistory(data); //saves data to history
       });
   }, []);
 
-  const historyItems = []; //boxes you will see on screen 
+  const historyItems = []; //boxes you will see on screen
   for (let i = 0; i < history.length; i=i+1) {
     const item = history[i]; //returns from backend one line at a time
     historyItems.push(
-      <div 
-        key = {item.id} //tells each box apart from each other
-        //styles the boxes
+      <div
+        key={item.id} //tells each box apart from each other
         style={{
           display: "flex",
           alignItems: "center",
@@ -32,35 +35,35 @@ export default function PatientHistory() { //makes available to other files
         }}
       >
         <div
-        //this is what displays the timestamp on the right of the screen
+          //this is what displays the date on the right of the screen
           style={{
-            backgroundColour: "#547aad",
+            backgroundColor: "#547aad",
             color: "white",
             fontFamily: "Monospace",
             borderRadius: "12px",
             padding: "8px 12px",
             marginRight: "24px",
-            minWidth: "80px"
+            minWidth: "80px",
           }}
         >
-          {item.timestamp}
+          {item.date}
         </div>
         <div
-        style={{
-          fontSize: "24px",
-          fontFamily: "Monospace",
-          color: "#547aad"
-        }}
+          style={{
+            fontSize: "24px",
+            fontFamily: "Monospace",
+            color: "#547aad",
+          }}
         >
-          {item.message} {/*//displays message from data base*/}
+          {item.task} - {item.status} {/*displays task and status from database*/}
         </div>
       </div>
     );
   }
 
   return ( //helps the boxes actually display on screen and displays additional text
-        <div style={{ display: 'flex' }}>
- 
+    <div style={{ display: 'flex' }}>
+
       {/* Side Bar */}
       <div style={{
         display: 'flex',
@@ -75,7 +78,7 @@ export default function PatientHistory() { //makes available to other files
           height: '650px',
           width: '200px'
         }}>
- 
+
           <Link to="/patient" style={{
             color: 'white',
             textDecoration: 'none',
@@ -121,22 +124,13 @@ export default function PatientHistory() { //makes available to other files
             width: '100%',
             boxSizing: 'border-box'
           }}>Settings</Link>
- 
+
         </nav>
       </div>
-    <div style={{ padding: "40px" }}>
-      <h1 style={{ fontFamily: "Monospace",
-        textAlign: "center",
-        marginBottom: '20px',
-        fontSize: '100px',
-        marginLeft: '175px',
-        color: "#547aad" }}>
-        History
-      </h1>
-      <div>
-        {historyItems}
+      <div style={{ flex: 1, padding: '40px' }}>
+        <h1>Patient History</h1>
+        {historyItems.length > 0 ? historyItems : <p>No history found.</p>}
       </div>
-    </div>
-    </div>
+      </div>
   );
 }

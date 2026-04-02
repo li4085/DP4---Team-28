@@ -1,96 +1,157 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
- 
+
 export default function Login() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [role, setRole] = useState('');
-    const navigate = useNavigate();
- 
-    const handleLogin = () => {
-        if (!username || !password || !role) {
-            alert('Please make sure all fields are filled out.');
-            return;
-        }
-        if (role === 'patient') {
-            navigate('/patient');
-        }
-        else {
-            navigate('/psw');
-        }
-    };
-    
-    const handleKeyDown = (e) => {
-        if(e.key === 'Enter') {
-            handleLogin();
-        }
-    };
-    return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            gap: '16px',
-        }}>
-            <h1 style={{
-                fontFamily: 'DM Sans'
-            }}>Login</h1>
- 
-             <select
-            value = {role}
-            onChange = {e => setRole(e.target.value)}
-            style = {{
-                padding: '10px',
-                width: '250px',
-                fontSize: '24px',
-                fontFamily: 'DM Sans'
-            }}>
-                <option value = '' disabled>Select role</option>
-                <option value = 'patient'>Patient</option>
-                <option value = 'psw'>PSW</option>
-            </select>
- 
- 
-            <input
-            type = 'text'
-            placeholder = 'Username'
-            value = {username}
-            onChange = {e => setUsername(e.target.value)}
-            onKeyDown={handleKeyDown}
-            style = {{
-                padding: '10px',
-                width: '250px',
-                fontSize: '24px',
-                fontFamily: 'DM Sans'
-            }}></input>
- 
-            <input
-            type = 'password'
-            placeholder = 'Password'
-            value = {password}
-            onChange = {e => setPassword(e.target.value)}
-            onKeyDown={handleKeyDown}
-            style = {{
-                padding: '10px',
-                width: '250px',
-                fontSize: '24px',
-                fontFamily: 'DM Sans'
-            }}></input>
- 
-            <button
-            onClick = {handleLogin}
-            style = {{
-                padding: '10px',
-                fontSize: '24px',
-                backgroundColor: '#547aad',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontFamily: 'DM Sans'
-            }}> Login </button>
-        </div>
-    );
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    if (!username || !password || !role) {
+      alert('Please make sure all fields are filled out.');
+      return;
+    }
+
+    const endpoint =
+      role === 'patient'
+        ? 'http://localhost:8000/patients-login/login'
+        : 'http://localhost:8000/psw-login/login';
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `${endpoint}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+        { method: 'POST' },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Login failed.');
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('name', data.name);
+      localStorage.setItem('role', role);
+
+      if (role === 'patient') {
+        navigate('/patient');
+      } else {
+        navigate('/psw');
+      }
+    } catch (error) {
+      alert(error.message || 'Could not connect to the server.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        gap: '16px',
+      }}
+    >
+      <h1
+        style={{
+          fontFamily: 'Monospace',
+          fontSize: '80px',
+          marginTop: '-200px',
+        }}
+      >
+        Welcome to PSUU
+      </h1>
+
+      <h1
+        style={{
+          fontFamily: 'DM Sans',
+          paddingTop: '80px',
+        }}
+      >
+        Login
+      </h1>
+
+      <select
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+        style={{
+          padding: '10px',
+          width: '250px',
+          fontSize: '24px',
+          fontFamily: 'DM Sans',
+        }}
+      >
+        <option value="" disabled>
+          Select role
+        </option>
+        <option value="patient">Patient</option>
+        <option value="psw">PSW</option>
+      </select>
+
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        onKeyDown={handleKeyDown}
+        style={{ padding: '10px', width: '250px', fontSize: '24px', fontFamily: 'DM Sans' }}
+      />
+
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        onKeyDown={handleKeyDown}
+        style={{ padding: '10px', width: '250px', fontSize: '24px', fontFamily: 'DM Sans' }}
+      />
+
+      <button
+        onClick={handleLogin}
+        disabled={isSubmitting}
+        style={{
+          padding: '10px',
+          fontSize: '24px',
+          backgroundColor: '#547aad',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: isSubmitting ? 'wait' : 'pointer',
+          opacity: isSubmitting ? 0.8 : 1,
+          fontFamily: 'DM Sans',
+        }}
+      >
+        {isSubmitting ? 'Logging In...' : 'Login'}
+      </button>
+
+      <p style={{ fontFamily: 'DM Sans', fontSize: '16px' }}>
+        Need an account?{' '}
+        <a
+          href="/signup"
+          style={{
+            textDecoration: 'underline',
+            color: 'inherit',
+            fontFamily: 'DM Sans',
+            fontSize: '16px',
+          }}
+        >
+          Sign up
+        </a>
+      </p>
+    </div>
+  );
 }

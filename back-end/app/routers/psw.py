@@ -1,15 +1,27 @@
-﻿from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, SQLModel, select
 from app.database import get_session
-from app.models import PSW_profiles
+from app.models import PSW_profiles, Patient_profiles
 import hashlib
 
 router = APIRouter(prefix="/psw-login", tags=["PSW-login"])
 
 active_psw_sessions = {}
 
+
+class PSWProfileUpdate(SQLModel):
+    name: str
+    username: str
+    age: int
+    current_password: str
+
 @router.post("/signup", response_model=PSW_profiles)
 def signup(psw: PSW_profiles, session: Session = Depends(get_session)):
+    existing_psw = session.exec(select(PSW_profiles).where(PSW_profiles.username == psw.username)).first()
+    existing_patient = session.exec(select(Patient_profiles).where(Patient_profiles.username == psw.username)).first()
+    if existing_psw or existing_patient:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    psw.id = None
     psw.password = hashlib.sha256(psw.password.encode()).hexdigest()
     session.add(psw)
     session.commit()
@@ -26,6 +38,61 @@ def login(username: str, password: str, session: Session = Depends(get_session))
     token = hashlib.sha256(f"{username}{password}".encode()).hexdigest()
     active_psw_sessions[token] = psw.id
     return {"token": token, "name": psw.name}
+
+@router.get("/profile")
+def get_profile(token: str, session: Session = Depends(get_session)):
+    psw_id = get_current_psw(token)
+    psw = session.exec(select(PSW_profiles).where(PSW_profiles.id == psw_id)).first()
+    if not psw:
+        raise HTTPException(status_code=404, detail="PSW profile not found")
+
+    return {
+        "name": psw.name,
+        "username": psw.username,
+        "age": psw.age,
+    }
+
+
+@router.put("/profile")
+def update_profile(update: PSWProfileUpdate, token: str, session: Session = Depends(get_session)):
+    psw_id = get_current_psw(token)
+    psw = session.exec(select(PSW_profiles).where(PSW_profiles.id == psw_id)).first()
+    if not psw:
+        raise HTTPException(status_code=404, detail="PSW profile not found")
+
+    hashed_password = hashlib.sha256(update.current_password.encode()).hexdigest()
+    if psw.password != hashed_password:
+        raise HTTPException(status_code=401, detail="Incorrect password")
+
+    existing_psw = session.exec(
+        select(PSW_profiles).where(
+            PSW_profiles.username == update.username,
+            PSW_profiles.id != psw_id,
+        )
+    ).first()
+    existing_patient = session.exec(
+        select(Patient_profiles).where(Patient_profiles.username == update.username)
+    ).first()
+
+    if existing_psw or existing_patient:
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    psw.name = update.name
+    psw.username = update.username
+    psw.age = update.age
+
+    session.add(psw)
+    session.commit()
+    session.refresh(psw)
+
+    return {
+        "message": "Profile updated successfully",
+        "profile": {
+            "name": psw.name,
+            "username": psw.username,
+            "age": psw.age,
+        },
+    }
 
 def get_current_psw(token: str) -> int:
     if token not in active_psw_sessions:
