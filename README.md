@@ -4,7 +4,7 @@ Hello and welcome to PSUU! PSUU is a patient and Personal Support Worker schedul
 
 ## Tech Stack
 
-- Frontend: React, Vite, React Router, Leaflet, React Leaflet
+- Frontend: React, Vite, React Router, Leaflet, React Leaflet, Nominatim API (OpenStreetMap's geocoder)
 - Backend: FastAPI, SQLModel, Uvicorn
 - Database: SQLite
 
