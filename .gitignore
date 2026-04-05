@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 .env
 app.db
+back-end/.tmp/
 
 node_modules/
 dist/
