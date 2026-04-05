@@ -126,6 +126,7 @@ export default function Signup() {
       }}
     >
       {/* App title */}
+      {/* Logo at the top of the page */}
             <img
         src="/UU.png"
         alt="PSUU Logo"
@@ -249,14 +250,6 @@ export default function Signup() {
               cursor: 'pointer',
               fontFamily: 'DM Sans'
             }}> Sign-Up </button>
-
-          <p style={{ fontFamily: 'DM Sans', fontSize: '16px' }}>
-            Already have an account?{' '}
-            <span
-              onClick={() => navigate('/login')}
-              style={{ cursor: 'pointer', textDecoration: 'underline' }}
-            >Login</span>
-          </p>
         </>
       )}
       {/* PSW signup form: only when role is 'psw' */}
@@ -309,14 +302,6 @@ export default function Signup() {
               cursor: 'pointer',
               fontFamily: 'DM Sans'
             }}> Sign-Up </button>
-
-          <p style={{ fontFamily: 'DM Sans', fontSize: '16px' }}>
-            Already have an account?{' '}
-            <span
-              onClick={() => navigate('/login')}
-              style={{ cursor: 'pointer', textDecoration: 'underline' }}
-            >Login</span>
-          </p>
         </>
       )}
     </div>
