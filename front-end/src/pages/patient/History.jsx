@@ -1,5 +1,5 @@
 //sets up patient history page's front-end 
-//import statments imports data storing tools from react
+//import statements imports data storing tools from react
 import { useEffect, useState } from "react"; 
 import { Link, useLocation } from 'react-router-dom';
 

@@ -1,3 +1,4 @@
+//Sets up PSW home page front end
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -11,6 +12,7 @@ export default function PSWHome() {
   const [isAlertsLoading, setIsAlertsLoading] = useState(false);
   const location = useLocation();
 
+  //Fetches emergency alerts in the background
   const loadEmergencySummary = async () => {
     const token = localStorage.getItem('token');
 
@@ -35,7 +37,7 @@ export default function PSWHome() {
   useEffect(() => {
     loadEmergencySummary();
   }, []);
-
+//Fetches regular queue
   const loadQueue = async () => {
     const token = localStorage.getItem('token');
 
@@ -63,7 +65,7 @@ export default function PSWHome() {
       setIsQueueLoading(false);
     }
   };
-
+//Fetches emergency alerts
   const loadAlerts = async () => {
     const token = localStorage.getItem('token');
 
@@ -91,7 +93,7 @@ export default function PSWHome() {
       setIsAlertsLoading(false);
     }
   };
-
+//Marks the first patient in queue as completed
   const handleFinishJob = async (type) => {
     const token = localStorage.getItem('token');
     const nextPatient = type === 'alerts' ? emergencyQueue[0] : queue[0];
@@ -104,10 +106,11 @@ export default function PSWHome() {
     if (!nextPatient) {
       return;
     }
-
+//Nothing to finish if the queue is empty
     setIsFinishingJob(true);
 
     try {
+      //Use different endpoints depending on whether it is an emergency or regular request
       const endpoint =
         type === 'alerts'
           ? `http://localhost:8000/psw-home/queue/emergency/complete/${nextPatient.id}?token=${token}`
@@ -122,7 +125,7 @@ export default function PSWHome() {
       if (!response.ok) {
         throw new Error(data.detail || 'Could not finish the job.');
       }
-
+//Remove the first patient from the list since job is done
       if (type === 'alerts') {
         setEmergencyQueue((currentQueue) => currentQueue.slice(1));
       } else {
@@ -140,7 +143,7 @@ export default function PSWHome() {
     setDialogType(null);
     setActiveButton(null);
   };
-
+//Yellow icon displayed on Alerts button when emergencies exist
   const warningIcon = (
     <div
       style={{
@@ -177,7 +180,7 @@ export default function PSWHome() {
       />
     </div>
   );
-
+  //Determine which list and labels to show
   const dialogItems = dialogType === 'alerts' ? emergencyQueue : queue;
   const isAlertDialog = dialogType === 'alerts';
   const dialogHeading = isAlertDialog ? 'Alerts' : 'Pending Requests';
@@ -192,7 +195,7 @@ export default function PSWHome() {
   return (
     <div style={{ display: 'flex' }}>
 
-      {/* Side Bar */}
+      {/* Sidebar navigation */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -206,7 +209,7 @@ export default function PSWHome() {
           height: '650px',
           width: '200px'
         }}>
-
+{/* Darken the Home link if currently on /psw */}
           <Link to="/psw" style={{
             color: 'white',
             textDecoration: 'none',
@@ -255,8 +258,9 @@ export default function PSWHome() {
 
         </nav>
       </div>
-      {/*Main Content */}
+      {/* Main Content area */}
       <div style={{ flex: 1, padding: '40px' }}>
+        {/* Welcome message customized to username */}
         <h1 style={{
           color: '#7ed957',
           fontSize: '50px',
@@ -278,6 +282,8 @@ export default function PSWHome() {
             flexDirection: 'column',
             gap: '60px'
           }}>
+            {/* Action buttons: Check in, Pending requests, Alerts */}
+            {/* placeholder Check in button */}
             <button onClick={() => setActiveButton(activeButton === 'schedule' ? null : 'schedule')}
               style={{
                 width: '400px',
@@ -312,6 +318,7 @@ export default function PSWHome() {
               </span>
             </button>
           </div>
+          {/* Alerts button */}
           <button onClick={loadAlerts}
             style={{
               width: '200px',

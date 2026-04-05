@@ -1,3 +1,5 @@
+//Sets up patient settings page's front-end 
+//Import statements imports data storing tools from react
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
@@ -16,7 +18,7 @@ export default function PatientSettings() {
     address: '',
     current_password: '',
   });
-
+//Reusable style objects
   const lineStyle = {
     borderWidth: '3px',
     borderStyle: 'solid',
@@ -109,7 +111,8 @@ export default function PatientSettings() {
     cursor: 'pointer',
     fontSize: '18px',
   };
-
+//Toggles the profile card open and closed
+//Fetches profile data
   const handleAccountClick = async () => {
     if (showProfile) {
       setShowProfile(false);
@@ -138,6 +141,7 @@ export default function PatientSettings() {
       }
 
       setProfile(data);
+      //Pre-fills the boxes with fetched data
       setEditForm({
         name: data.name,
         username: data.username,
@@ -152,14 +156,14 @@ export default function PatientSettings() {
       setIsLoadingProfile(false);
     }
   };
-
+//Updates one field in the edit form without overwriting the others
   const handleEditChange = (field, value) => {
     setEditForm((current) => ({
       ...current,
       [field]: value,
     }));
   };
-
+//Enters editing mode,resetting the form to the current and saved profile inputs
   const handleStartEditing = () => {
     if (!profile) {
       return;
@@ -174,7 +178,7 @@ export default function PatientSettings() {
     });
     setIsEditingProfile(true);
   };
-
+//Exits editing mode and discard unsaved changes
   const handleCancelEditing = () => {
     setIsEditingProfile(false);
     if (profile) {
@@ -187,7 +191,8 @@ export default function PatientSettings() {
       });
     }
   };
-
+//Sends the edited profile to the back end
+//Requires the user to enter password for confirmation before saving 
   const handleSaveProfile = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -222,7 +227,7 @@ export default function PatientSettings() {
       if (!response.ok) {
         throw new Error(data.detail || 'Could not update profile.');
       }
-
+      
       setProfile(data.profile);
       setEditForm({
         name: data.profile.name,
@@ -243,6 +248,7 @@ export default function PatientSettings() {
 
   return (
     <div style={{ display: 'flex' }}>
+      {/*Sidebar navigation */}
       <div
         style={{
           display: 'flex',
@@ -316,6 +322,7 @@ export default function PatientSettings() {
           >
             Map
           </Link>
+          {/*Darkens background colour in sidebar when on this page */}
           <Link
             to="/patient/settings"
             style={{
@@ -332,7 +339,7 @@ export default function PatientSettings() {
           </Link>
         </nav>
       </div>
-
+      {/* Main content area */}
       <div style={{ flex: 1, padding: '40px' }}>
         <h1
           style={{
@@ -347,6 +354,7 @@ export default function PatientSettings() {
         </h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', marginTop: '90px' }}>
           <hr style={lineStyle} />
+          {/* Account button: opens/closes the profile editing page */}
           <button
             type="button"
             style={{ ...buttonStyle, fontSize: '48px', fontFamily: 'DM Sans' }}
@@ -381,6 +389,7 @@ export default function PatientSettings() {
               </div>
               {!isLoadingProfile && profile && (
                 <>
+                {/*Editing mode: show input fields */}
                   {isEditingProfile ? (
                     <>
                       <div style={profileRowStyle}>
@@ -439,6 +448,7 @@ export default function PatientSettings() {
                           <div style={{ marginTop: '8px', opacity: 0.9 }}>{profile.assigned_psw_name}</div>
                         </div>
                       </div>
+                      {/* Password confirmation required before saving */}
                       <div style={{ ...profileRowStyle, borderBottom: 'none' }}>
                         <div style={{ width: '100%' }}>
                           <strong>Confirm With Password</strong>
@@ -466,6 +476,7 @@ export default function PatientSettings() {
                     </>
                   ) : (
                     <>
+                    {/* Show read-only profile data */}
                       <div style={profileRowStyle}>
                         <strong>Name and Username</strong>
                         <span>{profile.name} ({profile.username})</span>
@@ -494,6 +505,7 @@ export default function PatientSettings() {
           )}
 
           <hr style={lineStyle} />
+          {/* Placeholder notification button */}
           <button
             type="button"
             style={{ ...buttonStyle, fontSize: '48px', fontFamily: 'DM Sans' }}
@@ -509,7 +521,9 @@ export default function PatientSettings() {
           >
             Notifications
           </button>
+
           <hr style={lineStyle} />
+          {/* Log out button: redirects to login page */}
           <button
             type="button"
             style={{ ...buttonStyle, fontSize: '48px', fontFamily: 'DM Sans' }}

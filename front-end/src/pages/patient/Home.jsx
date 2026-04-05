@@ -1,6 +1,9 @@
+//Sets up patient home page's front-end 
+//Import statements imports data storing tools from react
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+//Exports patient home page component so other files can use it
 export default function PatientHome() {
   const [activeButton, setActiveButton] = useState(null);
   const [isInQueue, setIsInQueue] = useState(false);
@@ -13,6 +16,7 @@ export default function PatientHome() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
+    //If not logged in, skip the fetch
     if (!token) {
       setIsQueueLoading(false);
       return;
@@ -40,7 +44,7 @@ export default function PatientHome() {
         setIsQueueLoading(false);
       });
   }, []);
-
+//Handles joining or leaving the PSW queue
   const handleQueueToggle = async () => {
     const token = localStorage.getItem("token");
 
@@ -83,7 +87,7 @@ export default function PatientHome() {
       setIsQueueLoading(false);
     }
   };
-
+//Handles activating or cancelling emergency alerts
   const handleEmergencyToggle = async () => {
     const token = localStorage.getItem("token");
 
@@ -108,7 +112,7 @@ export default function PatientHome() {
       if (!response.ok) {
         throw new Error(data.detail || "Emergency request failed.");
       }
-
+//Cancels the emergency and clears all queue states
       if (isEmergencyActive) {
         setIsEmergencyActive(false);
         setIsInQueue(false);
@@ -129,6 +133,7 @@ export default function PatientHome() {
     }
   };
 
+  //Sidebar elements
   return (
     <div style={{ display: "flex" }}>
       <div
@@ -148,6 +153,7 @@ export default function PatientHome() {
             width: "200px",
           }}
         >
+          {/* Darken the Home slot in sidebar if currently on /patient */}
           <Link
             to="/patient"
             style={{
@@ -221,7 +227,8 @@ export default function PatientHome() {
           </Link>
         </nav>
       </div>
-
+    {/* Main content area */}
+    {/* Display text at the top of the page, customized to the patient username */}
       <div style={{ flex: 1, padding: "40px" }}>
         <h1
           style={{
@@ -251,6 +258,7 @@ export default function PatientHome() {
               gap: "60px",
             }}
           >
+          {/* Action buttons: Add to Schedule, Join queue, Emergency */}
             <button
               onClick={() =>
                 navigate("/patient/schedule", { state: { openForm: true } })

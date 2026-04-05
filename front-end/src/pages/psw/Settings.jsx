@@ -1,3 +1,5 @@
+// Sets up PSW settings page's front-end
+// Import statements for data storing tools from React
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
@@ -15,7 +17,7 @@ export default function PSWSettings() {
     age: '',
     current_password: '',
   });
-
+// Reusable style objects
   const lineStyle = {
     borderWidth: '3px',
     borderStyle: 'solid',
@@ -39,7 +41,7 @@ export default function PSWSettings() {
     borderRadius: '18px',
     boxShadow: '0 10px 24px rgba(0, 0, 0, 0.18)',
   };
-
+// Card container for the profile information section
   const profileCardStyle = {
     width: '70%',
     marginLeft: '80px',
@@ -108,7 +110,8 @@ export default function PSWSettings() {
     cursor: 'pointer',
     fontSize: '18px',
   };
-
+//Toggles profile card open and closed
+//Fetches profile data from the server
   const handleAccountClick = async () => {
     if (showProfile) {
       setShowProfile(false);
@@ -137,6 +140,7 @@ export default function PSWSettings() {
       }
 
       setProfile(data);
+      // Pre-fills the boxes with fetched data
       setEditForm({
         name: data.name,
         username: data.username,
@@ -150,14 +154,14 @@ export default function PSWSettings() {
       setIsLoadingProfile(false);
     }
   };
-
+// Updates one field in the edit form without overwriting the others
   const handleEditChange = (field, value) => {
     setEditForm((current) => ({
       ...current,
       [field]: value,
     }));
   };
-
+// Enters editing mode, resetting the form to the current and saved profile inputs
   const handleStartEditing = () => {
     if (!profile) {
       return;
@@ -171,7 +175,7 @@ export default function PSWSettings() {
     });
     setIsEditingProfile(true);
   };
-
+// Exits editing mode and discards unsaved changes
   const handleCancelEditing = () => {
     setIsEditingProfile(false);
     if (profile) {
@@ -183,7 +187,8 @@ export default function PSWSettings() {
       });
     }
   };
-
+// Sends the edited profile to back end
+// Requires the user to enter password for confirmation before saving
   const handleSaveProfile = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -217,7 +222,7 @@ export default function PSWSettings() {
       if (!response.ok) {
         throw new Error(data.detail || 'Could not update profile.');
       }
-
+      // Update profile data
       setProfile(data.profile);
       setEditForm({
         name: data.profile.name,
@@ -237,6 +242,7 @@ export default function PSWSettings() {
 
   return (
     <div style={{ display: 'flex' }}>
+      {/* Sidebar navigation */}
       <div
         style={{
           display: 'flex',
@@ -310,6 +316,7 @@ export default function PSWSettings() {
           >
             Map
           </Link>
+          {/* Darkens background colour in sidebar when on this page */}
           <Link
             to="/psw/settings"
             style={{
@@ -326,7 +333,7 @@ export default function PSWSettings() {
           </Link>
         </nav>
       </div>
-
+          {/* Main content area */}
       <div style={{ flex: 1, padding: '40px' }}>
         <h1
           style={{
@@ -341,6 +348,7 @@ export default function PSWSettings() {
         </h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', marginTop: '90px' }}>
           <hr style={lineStyle} />
+          {/* Account button: opens/closes the profile card */}
           <button
             type="button"
             style={{ ...buttonStyle, fontSize: '48px', fontFamily: 'DM Sans' }}
@@ -451,7 +459,7 @@ export default function PSWSettings() {
               )}
             </div>
           )}
-
+          {/* Placeholder Notifications button */}
           <hr style={lineStyle} />
           <button
             type="button"
@@ -468,6 +476,7 @@ export default function PSWSettings() {
           >
             Notifications
           </button>
+          {/* Log out button: redirects to login page */}
           <hr style={lineStyle} />
           <button
             type="button"

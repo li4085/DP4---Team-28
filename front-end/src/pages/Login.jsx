@@ -1,12 +1,16 @@
+// Sets up Login page front end
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
+  // Controlled input state for the username and password fields
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // Loading state when the login request is in progress
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  // Sends login credentials to back end and redirects based on user's role
   const handleLogin = async () => {
     if (!username || !password) {
       alert('Please make sure all fields are filled out.');
@@ -26,11 +30,11 @@ export default function Login() {
       if (!response.ok) {
         throw new Error(data.detail || 'Login failed.');
       }
-
+// Store the token, name, role in localStorage for use across the app
       localStorage.setItem('token', data.token);
       localStorage.setItem('name', data.name);
       localStorage.setItem('role', data.role);
-
+//Redirect to the appropriate home page based on the user's role
       if (data.role === 'patient') {
         navigate('/patient');
       } else {
@@ -42,7 +46,7 @@ export default function Login() {
       setIsSubmitting(false);
     }
   };
-
+// Allows the user to submit the login form by pressing Enter
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleLogin();
@@ -67,6 +71,7 @@ export default function Login() {
           marginTop: '-200px',
         }}
       >
+        {/* App title */}
         Welcome to PSUU
       </h1>
 
@@ -78,7 +83,7 @@ export default function Login() {
       >
         Login
       </h1>
-
+{/* Username input: triggers login on Enter key */}
       <input
         type="text"
         placeholder="Username"
@@ -87,7 +92,7 @@ export default function Login() {
         onKeyDown={handleKeyDown}
         style={{ padding: '10px', width: '250px', fontSize: '24px', fontFamily: 'DM Sans' }}
       />
-
+{/* Password input: trigger login on Enter key */}
       <input
         type="password"
         placeholder="Password"
@@ -96,7 +101,7 @@ export default function Login() {
         onKeyDown={handleKeyDown}
         style={{ padding: '10px', width: '250px', fontSize: '24px', fontFamily: 'DM Sans' }}
       />
-
+{/* Login button: disabled and shows loading text while request is in progress */}
       <button
         onClick={handleLogin}
         disabled={isSubmitting}
@@ -114,7 +119,7 @@ export default function Login() {
       >
         {isSubmitting ? 'Logging In...' : 'Login'}
       </button>
-
+{/* Link to the sign up page for new users */}
       <p style={{ fontFamily: 'DM Sans', fontSize: '16px' }}>
         Need an account?{' '}
         <a
