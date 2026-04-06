@@ -58,11 +58,21 @@ cd DP4---Team-28
 ```
 
 ### 2. Start the backend
+If you are on Mac:
 
 ```bash
 cd back-end
 python3 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+If you are on Windows:
+```bash
+cd back-end
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
@@ -80,6 +90,7 @@ http://localhost:8000/docs
 ```
 
 ### 3. Start the frontend
+For Windows and Mac:
 
 Open a second terminal:
 
